@@ -45,8 +45,6 @@
                 </form>
             </div>
 
-<!--            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">-->
-
             <div th:if="${groupedDocs != null}" th:each="entry : ${groupedDocs}">
 
                 <th:block th:each="p : ${allProjects}">
@@ -68,9 +66,11 @@
                                 </div>
 
                                 <form th:if="${userRole == 'author' || userRole == 'admin'}"
-                                      th:action="@{/document-microservice/upload}" method="post" enctype="multipart/form-data" style="margin: 0;">
+                                      th:action="@{/document-microservice/documents}" method="post" enctype="multipart/form-data" style="margin: 0;">
+                                    <input type="hidden" name="userId" th:value="${userId}">
+                                    <input type="hidden" name="name" th:value="${username}">
                                     <input type="hidden" name="projectId" th:value="${p['id']}">
-                                    <input type="file" name="file" style="display: none;" onchange="this.form.submit();">
+                                    <input type="hidden" name="projectName" th:value="${p['name']}"> <input type="file" name="file" style="display: none;" onchange="this.form.submit();">
                                     <button type="button" class="doc-icon" onclick="this.previousElementSibling.click()" style="background: transparent; border: none; cursor: pointer; padding: 5px;">
                                         <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 18px; height: 18px;">
                                     </button>
@@ -109,7 +109,7 @@
             <h2 id="selected-file-title">Active Versions</h2>
         </div>
         <div id="active-version-container">
-            <p style="text-align: center; color: #888; margin-top: 20px;">
+            <p style="text-align: center; color: var(--text-sub); margin-top: 20px;">
                 Select a file from the left to see its version.
             </p>
         </div>
@@ -121,26 +121,26 @@
         </div>
 
         <div th:if="${userRole == 'author' || userRole == 'admin'}" style="padding: 0 15px;">
-            <form th:action="@{/document-microservice/upload}" method="post" enctype="multipart/form-data" id="mainUploadForm" style="display: flex; flex-direction: column; gap: 12px;">
+            <form th:action="@{/document-microservice/documents}" method="post" enctype="multipart/form-data" id="mainUploadForm" ...>
                 <input type="hidden" name="userId" th:value="${userId}">
                 <input type="hidden" name="name" th:value="${username}">
 
-                <label style="font-size: 0.8rem; color: #666; margin-bottom: -8px;">Target Project:</label>
-                <select name="projectId" class="project-input" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
-                    <option value="" disabled selected>-- Select Project --</option>
-                    <option th:each="proj : ${allProjects}"
-                            th:value="${proj.id}"
-                            th:text="${proj.name}">
-                    </option>
+                <input type="hidden" name="documentId" id="selectedDocumentId">
+
+                <label id="projectLabel" ...>Target Project:</label>
+                <select name="projectId" id="projectSelect" class="project-input" required ...>
+                    <option th:each="proj : ${allProjects}" th:value="${proj.id}" th:text="${proj.name}"></option>
                 </select>
 
-                <input type="file" id="fileInputMain" name="file" style="display: none;" onchange="document.getElementById('mainUploadForm').submit();">
+                <input type="file" id="fileInputMain" name="file" style="display: none;" onchange="this.form.submit();">
 
                 <button type="button" class="upload-btn" onclick="document.getElementById('fileInputMain').click()" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
+
                     <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 20px; height: 20px;">
                     UPLOAD FILE
                 </button>
             </form>
+
         </div>
 
         <div class="section-title" style="margin-top: 30px;">Drafts</div>
@@ -176,6 +176,23 @@
     function toggleFolder(element) {
         const list = element.parentElement.nextElementSibling;
         list.style.display = (list.style.display === 'none' || list.style.display === '') ? 'block' : 'none';
+    }
+
+    function handleFileClick(element) {
+        const docId = element.getAttribute('data-id');
+        const docName = element.getAttribute('data-name');
+
+        const idInput = document.getElementById('selectedDocumentId');
+        const projectSelect = document.getElementById('projectSelect');
+        const projectLabel = document.getElementById('projectLabel');
+        const btnText = document.getElementById('uploadBtnText');
+
+        if (idInput) idInput.value = docId;
+        if (projectSelect) projectSelect.style.display = 'none';
+        if (projectLabel) projectLabel.style.display = 'none';
+        if (btnText) btnText.innerText = "UPLOAD VERSION TO: " + docName;
+
+
     }
 </script>
 

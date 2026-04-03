@@ -60,6 +60,19 @@ public class DocumentService {
         return documentRepository.save(doc);
     }
 
+    @Transactional
+    public Document saveAsDraft(MultipartFile file, UUID projectId, UUID userId) {
+        Document doc = new Document();
+        doc.setName(file.getOriginalFilename());
+        doc.setProjectId(projectId);
+
+        doc.setDescription("Draft");
+
+        doc.setCreatedBy(userId);
+        doc.setCreatedAt(LocalDateTime.now());
+        return documentRepository.save(doc);
+    }
+
     public Optional<Document> getId(UUID docId) {
         return documentRepository.findById(docId);
     }
