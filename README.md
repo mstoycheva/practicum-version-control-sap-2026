@@ -2,7 +2,7 @@
 ---
 ## 👥 Our Team
 
-- **Marieata Stoycheva** – github.com/mstoycheva  
+- **Marieta Stoycheva** – github.com/mstoycheva  
 - **Desislava Tsocheva** – github.com/desislavaTsocheva  
 - **Milena Boyadzhieva** – github.com/MilenaB12  
 - **Bozhidara Malkocheva** – github.com/BMalkocheva  
