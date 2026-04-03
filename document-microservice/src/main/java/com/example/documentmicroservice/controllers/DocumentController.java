@@ -2,6 +2,7 @@ package com.example.documentmicroservice.controllers;
 
 import com.example.documentmicroservice.models.Document;
 import com.example.documentmicroservice.models.File;
+import com.example.documentmicroservice.models.Version;
 import com.example.documentmicroservice.services.DocumentService;
 import com.example.documentmicroservice.services.FileService;
 import com.example.documentmicroservice.services.VersionService;
@@ -13,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,7 +49,6 @@ public class DocumentController {
         try {
             RestTemplate restTemplate = new RestTemplate();
             String url = "http://localhost:8080/project-microservice/projects/user/" + userId;
-//            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
             allProjects = restTemplate.getForObject(url, List.class);
             model.addAttribute("allProjects", allProjects);
             if (allProjects != null) {
@@ -65,7 +66,6 @@ public class DocumentController {
         } catch (Exception e) {
             System.err.println("Project fetch failed: " + e.getMessage());
         }
-
         String role = "reader";
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -106,6 +106,47 @@ public class DocumentController {
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(data);
     }
+
+    @PostMapping("/documents")
+    public String uploadDocument(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("userId") UUID userId,
+            @RequestParam(value = "projectId", required = false) UUID projectId,
+            @RequestParam(value = "documentId", required = false) UUID documentId,
+            @RequestParam(value = "projectName", required = false) String projectName,
+            @RequestParam(value = "name", required = false, defaultValue = "User") String name) {
+
+        Document document;
+        if (documentId != null) {
+            document = documentService.findById(documentId);
+        } else {
+            document = documentService.saveDocument(file, projectId, projectName, userId);
+        }
+
+        // Version version = versionService.saveVersion(userId, document);
+        // fileService.saveFile(version.getId(), file);
+
+        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + name;    }
+
+       private byte[] safeGetBytes(MultipartFile file) {
+            throw new RuntimeException("Failed to read file bytes");
+        }
+
+
+    @PostMapping("/documents-draft")
+    public String uploadDraft(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("userId") UUID userId,
+            @RequestParam("projectId") UUID projectId,
+            @RequestParam(value = "name", required = false, defaultValue = "User") String name) {
+
+        Document document = documentService.saveAsDraft(file, projectId, userId);
+        // Version version = versionService.saveVersion(userId, document);
+        // fileService.saveFile(version.getId(), file);
+
+        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + name;
+    }
+
 
     @GetMapping("/documents/count")
     @ResponseBody

@@ -28,15 +28,21 @@ public class FileController {
     public String handleUpload(
             @RequestParam("file") MultipartFile file,
             @RequestParam("userId") UUID userId,
-            @RequestParam("projectId") UUID projectId,
+            @RequestParam(value = "projectId", required = false) UUID projectId, // Вече не е задължителен, ако имаме documentId
+            @RequestParam(value = "documentId", required = false) UUID documentId, // ДОБАВЕНО
             @RequestParam(value = "projectName", required = false) String projectName,
             @RequestParam(value = "name", required = false, defaultValue = "User") String name) {
 
-        Document document = documentService.saveDocument(file, projectId, projectName, userId);
+        Document document;
+        if (documentId != null) {
+            document = documentService.findById(documentId);
+        } else {
+            document = documentService.saveDocument(file, projectId, projectName, userId);
+        }
 
         Version version = versionService.saveVersion(userId, document);
-
         fileService.saveFile(version.getId(), file);
+
         return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + name;
     }
 }
