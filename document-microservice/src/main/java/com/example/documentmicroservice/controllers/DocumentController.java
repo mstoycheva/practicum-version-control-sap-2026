@@ -59,23 +59,41 @@ public class DocumentController {
             return map;
         }).toList();
         //model.addAttribute("allDocuments", allDocuments);
+//        try {
+//            RestTemplate restTemplate = new RestTemplate();
+//            String url = "http://localhost:8080/project-microservice/projects/user/" + userId;
+////            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
+//            allProjects = restTemplate.getForObject(url, List.class);
+//            model.addAttribute("allProjects", allProjects);
+//            if (allProjects != null) {
+//                model.addAttribute("allProjects", allProjects);
+//
+//                for (Map<String, Object> proj : allProjects) {
+//                    String projectName = (String) proj.get("name");
+//                    if (!groupedDocs.containsKey(projectName)) {
+//                        groupedDocs.put(projectName, new ArrayList<>());
+//                    }
+//                }
+//            } else {
+//                model.addAttribute("allProjects", new ArrayList<>());
+//            }
+//        } catch (Exception e) {
+//            System.err.println("Project fetch failed: " + e.getMessage());
+//        }
+
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String url = "http://localhost:8080/project-microservice/projects/user/" + userId;
-//            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
+            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
             allProjects = restTemplate.getForObject(url, List.class);
             model.addAttribute("allProjects", allProjects);
-            if (allProjects != null) {
-                model.addAttribute("allProjects", allProjects);
 
+            if (allProjects != null) {
                 for (Map<String, Object> proj : allProjects) {
                     String projectName = (String) proj.get("name");
                     if (!groupedDocs.containsKey(projectName)) {
                         groupedDocs.put(projectName, new ArrayList<>());
                     }
                 }
-            } else {
-                model.addAttribute("allProjects", new ArrayList<>());
             }
         } catch (Exception e) {
             System.err.println("Project fetch failed: " + e.getMessage());

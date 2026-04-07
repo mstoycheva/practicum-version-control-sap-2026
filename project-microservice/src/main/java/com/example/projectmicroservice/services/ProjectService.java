@@ -33,9 +33,7 @@ public class ProjectService {
     public void saveDocumentInProject(UUID projectId, UUID documentId) {
         Project project = (Project) projectRepository.findByDocId(documentId);
     }
-
     public List<Project> getProjectsForUser(UUID userId) {
-        return projectRepository.findAllForUser(userId);
+        return projectRepository.findAllVisibleProjects(userId);
     }
-
 }

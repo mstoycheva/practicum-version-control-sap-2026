@@ -32,7 +32,7 @@ public class FileController {
             @RequestParam("userId") UUID userId,
             @RequestParam("projectId") UUID projectId,
             @RequestParam(value = "projectName", required = false) String projectName,
-            @RequestParam(value = "name", required = false) String name) {
+            @RequestParam(value = "username", required = false) String username) {
 
         if (file == null || file.isEmpty()) {
             System.out.println("empty file");
@@ -47,8 +47,7 @@ public class FileController {
             System.err.println("error: " + e.getMessage());
         }
 
-        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + name;
-    }
+        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + username;    }
 
     @PostMapping("/uploadVersion")
     public String uploadVersions(

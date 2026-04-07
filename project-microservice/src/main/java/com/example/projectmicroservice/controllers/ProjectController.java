@@ -41,17 +41,20 @@ public class ProjectController {
     @PostMapping("/projects/add")
     public String addNewProject(
             @RequestParam("projectName") String name,
-            @RequestParam("userId") UUID userId) {
+            @RequestParam("userId") UUID userId,
+            @RequestParam("username") String username,
+            @RequestParam(value = "isPublic",defaultValue = "false") boolean isPublic) {
 
         Project project = new Project();
         project.setName(name);
         project.setOwnerId(userId);
         project.setCreatedAt(LocalDateTime.now());
         project.setDescription("Active");
+        project.setPublic(isPublic);
 
         projectService.saveProject(project);
 
-        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId;
+        return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId + "&name=" + username;
     }
 
     @GetMapping("/projects/user/{userId}")
@@ -79,6 +82,7 @@ public class ProjectController {
     }
 
     @GetMapping("/projects/public/{userId}")
+    @ResponseBody
     public List<Project> getPublicProjects(@PathVariable UUID userId) {
         return projectService.getProjectsForUser(userId);
     }
