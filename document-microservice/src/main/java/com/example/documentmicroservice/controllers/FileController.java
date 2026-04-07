@@ -63,6 +63,7 @@ public class FileController {
         try {
             Document doc = documentService.findById(documentId);
             Version version = versionService.saveVersion(userId, doc);
+            version.setVersionNumber(version.getVersionNumber());
             fileService.saveFile(version.getId(), file);
 
         } catch (Exception e) {

@@ -1,11 +1,14 @@
 package com.example.documentmicroservice.models;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -20,24 +23,29 @@ public class Version {
     @Column(name="id", updatable=false,nullable=false)
     private UUID id;
 
-    @Column(name = "version_number", nullable =false, length=255)
+    @Column(name = "version_number", nullable =false)
     private int versionNumber;
 
-    @Column(name = "message",length=255)
+    @Column(name = "message")
     private String message;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt=LocalDateTime.now();
 
+    @JsonProperty("isApproved")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @Column(name = "is_approved")
-    private boolean isApproved;
+    private boolean approved;
 
+    @JsonProperty("isActive")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     @Column(name = "is_active")
-    private boolean isActive;
+    private boolean active;
 
     @Column(name = "document_id", nullable = false)
     private UUID documentId;
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
+
 }

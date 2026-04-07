@@ -113,14 +113,12 @@
                 <tr>
                     <th>Project Name</th>
                     <th>Description</th>
-                    <th>Status</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="project : ${projectsList}">
                     <td th:text="${project['name']}">Project Name</td>
                     <td th:text="${project['description']}">Description</td>
-                    <td><span class="badge admin">Active</span></td>
                 </tr>
                 </tbody>
             </table>
@@ -140,13 +138,11 @@
                 <thead>
                 <tr>
                     <th>Document Name</th>
-                    <th>Status</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="doc : ${documentsList}">
                     <td th:text="${doc['name']}">Document Title</td>
-                    <td><span class="badge admin">Available</span></td>
                 </tr>
                 </tbody>
             </table>

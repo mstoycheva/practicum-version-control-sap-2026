@@ -8,4 +8,5 @@ import java.util.UUID;
 @Repository
 public interface FileRepository extends JpaRepository<File, UUID> {
     Optional<File> findByVersionId(UUID versionId);
+    void deleteByVersionId(UUID versionId);
 }

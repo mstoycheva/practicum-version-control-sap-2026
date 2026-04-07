@@ -1,6 +1,7 @@
 package com.example.documentmicroservice.services;
 import com.example.documentmicroservice.models.Document;
 import com.example.documentmicroservice.models.Version;
+import com.example.documentmicroservice.repositories.FileRepository;
 import com.example.documentmicroservice.repositories.VersionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,9 +12,11 @@ import java.util.UUID;
 public class VersionService {
 
     private final VersionRepository versionRepository;
+    private final FileRepository fileRepository;
 
-    public VersionService(VersionRepository versionRepository) {
+    public VersionService(VersionRepository versionRepository, FileRepository fileRepository) {
         this.versionRepository = versionRepository;
+        this.fileRepository = fileRepository;
     }
 
     public List<Version> getAllVersions() {
@@ -22,17 +25,67 @@ public class VersionService {
 
     @Transactional
     public Version saveVersion(UUID userId, Document document) {
+        Integer lastVersion = versionRepository.findMaxVersionNumberByDocumentId(document.getId());
+        int nextVersion = (lastVersion == null) ? 1 : lastVersion + 1;
+
         Version version = new Version();
-        version.setVersionNumber(1);
+        version.setVersionNumber(nextVersion);
         version.setMessage(document.getName());
         version.setDocumentId(document.getId());
         version.setUserId(userId);
-        version.setActive(true);
-        version.setApproved(false);
+
+        if (nextVersion == 1) {
+            version.setActive(true);
+            version.setApproved(true);
+        } else {
+            version.setActive(false);
+            version.setApproved(false);
+        }
+
         return versionRepository.save(version);
     }
 
     public List<Version> findAllByCreatedBy(UUID userId) {
         return versionRepository.findByUserId(userId);
+    }
+
+//    @Transactional
+//    public void approveVersion(UUID versionId) {
+//        System.out.println("Approving version: " + versionId);
+//        Version newVersion = versionRepository.findById(versionId)
+//                .orElseThrow(() -> new RuntimeException("Version not found with id: " + versionId));
+//
+//        List<Version> activeVersions = versionRepository.findAllByDocumentIdAndActiveTrue(newVersion.getDocumentId());
+//
+//        if (activeVersions != null && !activeVersions.isEmpty()) {
+//            for (Version oldVersion : activeVersions) {
+//                if (!oldVersion.getId().equals(newVersion.getId())) {
+//                    oldVersion.setActive(false);
+//                    versionRepository.save(oldVersion);
+//                }
+//            }
+//        }
+//
+//        newVersion.setApproved(true);
+//        newVersion.setActive(true);
+//        versionRepository.save(newVersion);
+//        System.out.println("Approved version: " + versionId);
+//    }
+
+    @Transactional
+    public void approveVersion(UUID versionId) {
+        Version newVersion = versionRepository.findById(versionId)
+                .orElseThrow(() -> new RuntimeException("Version not found: " + versionId));
+
+        newVersion.setApproved(true);
+        newVersion.setActive(true);
+
+        versionRepository.save(newVersion);
+    }
+
+    @Transactional
+    public void deleteVersion(UUID versionId) {
+        fileRepository.deleteByVersionId(versionId);
+        versionRepository.deleteById(versionId);
     }
 }
