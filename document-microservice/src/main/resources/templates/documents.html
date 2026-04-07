@@ -6,6 +6,7 @@
     <script src="../static/js/document.js" th:src="@{/document-microservice/js/document.js}"></script>
     <link rel="stylesheet" th:href="@{/document-microservice/css/stylesheet.css}" href="../static/css/stylesheet.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" th:href="@{images/logo.png}">
 </head>
 <body>
 
@@ -28,11 +29,10 @@
                     onclick="showProjectFields()">NEW PROJECT</button>
 
             <div id="projectFields" style="display: none; flex-direction: column; margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 8px;">
-                <form action="http://localhost:8080/project-microservice/projects" method="post" id="addProject" style="display: flex; flex-direction: column; gap: 12px;">
-                    <input type="hidden" name="ownerId" th:value="${userId}">
-                    <input type="text" name="name" placeholder="Project Name" required class="project-input">
-                    <input type="text" name="description" placeholder="Project Description (optional)" class="project-input">
-
+                <form action="http://localhost:8080/project-microservice/projects/add" method="post" id="addProject" style="display: flex; flex-direction: column; gap: 12px;">
+                    <input type="hidden" name="userId" th:value="${userId}">
+                    <input type="hidden" name="username" th:value="${username}" />
+                    <input type="text" name="projectName" placeholder="Project Name" required class="project-input">
                     <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #555; cursor: pointer;">
                         <input type="checkbox" name="isPublic" value="true" style="width: 15px; height: 15px;">
                         Make this project public
@@ -45,60 +45,43 @@
                 </form>
             </div>
 
-<!--            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">-->
-
             <div th:if="${groupedDocs != null}" th:each="entry : ${groupedDocs}">
-
                 <th:block th:each="p : ${allProjects}">
                     <div th:if="${p['name'] == entry.key}" th:remove="tag">
-                        <div th:if="${userRole == 'admin' || userRole == 'author' ||  userRole == 'reader' || userRole == 'editor' || p['isPublic'] == true || p['public'] == true}"
+
+                        <div th:if="${p['public'] == true || p['isPublic'] == true || userRole == 'admin' || (p['ownerId'] != null && p['ownerId'].toString() == userId.toString())}"
                              class="project-container" style="margin-bottom: 10px;">
 
                             <div class="folder-header" style="display: flex; align-items: center; justify-content: space-between;">
-                                <div class="tree-item folder-toggle" onclick="toggleFolder(this)" style="margin: 0; flex-grow: 1; cursor: pointer;">
+                                <div class="tree-item folder-toggle" onclick="toggleFolder(this)" style="cursor: pointer;">
                                     <img th:src="@{/document-microservice/images/icon-folder.png}" alt="folder">
                                     <span class="profile-name">
-                                    <span th:text="${entry.key}">Project Name</span>
-
-                                    <span th:if="${p['isPublic'] == true || p['public'] == true}" title="Public Project">Public</span>
-                                    <span th:unless="${p['isPublic'] == true || p['public'] == true}" title="Private Project" style="opacity: 0.5;">Private</span>
-
-                                    <span class="file-count" th:text="${entry.value != null ? '(' + entry.value.size() + ')' : '(0)'}">(0)</span>
-                                     </span>
+                        <span th:text="${entry.key}">Project Name</span>
+                        <span th:if="${p['public'] == true || p['isPublic'] == true}" style="color: #2e7d32; font-size: 0.7rem;">(Public)</span>
+                    </span>
                                 </div>
 
-                                <form th:if="${userRole == 'author' || userRole == 'admin'}"
+                                <form th:if="${userRole == 'admin' || (p['ownerId'] != null && p['ownerId'].toString() == userId.toString())}"
                                       th:action="@{/document-microservice/upload}"
                                       method="post"
-                                      enctype="multipart/form-data"
-                                      th:id="'uploadForm-' + ${p['id']}">
+                                      enctype="multipart/form-data">
 
                                     <input type="hidden" name="userId" th:value="${userId}">
                                     <input type="hidden" name="projectId" th:value="${p['id']}">
                                     <input type="hidden" name="projectName" th:value="${p['name']}">
+                                    <input type="hidden" name="username" th:value="${username}" />
 
-                                    <input type="file"
-                                           name="file"
-                                           th:id="'fileInput-' + ${p['id']}"
-                                           style="display: none;"
-                                           onchange="this.form.submit();"> <button type="button"
-                                                                                   th:data-target="'fileInput-' + ${p['id']}"
-                                                                                   onclick="document.getElementById(this.getAttribute('data-target')).click();"
-                                                                                   style="background: transparent; border: none; cursor: pointer;">
-                                    <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 18px; height: 18px;">
-                                </button>
+                                    <input type="file" name="file" th:id="'fileInput-' + ${p['id']}" style="display: none;" onchange="this.form.submit();">
+                                    <button type="button" th:data-target="'fileInput-' + ${p['id']}" onclick="document.getElementById(this.getAttribute('data-target')).click();" style="background: transparent; border: none; cursor: pointer;">
+                                        <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 18px; height: 18px;">
+                                    </button>
                                 </form>
                             </div>
 
-                            <ul class="nested-docs" style="display: none; list-style: none; padding-left: 25px; margin-bottom: 10px;">
+                            <ul class="nested-docs" style="display: none; list-style: none; padding-left: 25px;">
                                 <li th:each="doc : ${entry.value}">
                                     <div class="tree-item file-clickable"
-                                         th:if="${userRole != 'reader'}"
-                                         style="cursor: pointer;"
                                          th:data-id="${doc.id}"
-                                         th:data-name="${doc.name}"
-                                         th:data-description="${doc.description}"
-                                         th:data-date="${doc.createdAt != null ? #temporals.format(doc.createdAt, 'dd.MM.yyyy') : 'N/A'}"
                                          onclick="handleFileClick(this)">
                                         <img th:src="@{/document-microservice/images/icon-file.png}" alt="file">
                                         <span th:text="${doc.name}">File Name</span>
@@ -106,7 +89,6 @@
                                 </li>
                             </ul>
                         </div>
-
                     </div>
                 </th:block>
             </div>

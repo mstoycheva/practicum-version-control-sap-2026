@@ -11,15 +11,13 @@ import java.util.UUID;
 
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
+    @Query("SELECT p FROM Project p WHERE p.ownerId = :userId OR p.isPublic = true")
+    List<Project> findAllVisibleProjects(@Param("userId") UUID userId);
     List<Project> findByOwnerId(UUID ownerId);
-
     long count();
 
     default List<Document> findByDocId(UUID docId){
         return findByDocId(docId);
     }
-
-    @Query(value = "SELECT * FROM projects WHERE owner_id = :userId OR privacy = 1", nativeQuery = true)
-    List<Project> findAllForUser(@Param("userId") UUID userId);
 }
 
