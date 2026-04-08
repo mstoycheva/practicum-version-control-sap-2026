@@ -49,39 +49,41 @@ public class VersionService {
         return versionRepository.findByUserId(userId);
     }
 
-//    @Transactional
-//    public void approveVersion(UUID versionId) {
-//        System.out.println("Approving version: " + versionId);
-//        Version newVersion = versionRepository.findById(versionId)
-//                .orElseThrow(() -> new RuntimeException("Version not found with id: " + versionId));
-//
-//        List<Version> activeVersions = versionRepository.findAllByDocumentIdAndActiveTrue(newVersion.getDocumentId());
-//
-//        if (activeVersions != null && !activeVersions.isEmpty()) {
-//            for (Version oldVersion : activeVersions) {
-//                if (!oldVersion.getId().equals(newVersion.getId())) {
-//                    oldVersion.setActive(false);
-//                    versionRepository.save(oldVersion);
-//                }
-//            }
-//        }
-//
-//        newVersion.setApproved(true);
-//        newVersion.setActive(true);
-//        versionRepository.save(newVersion);
-//        System.out.println("Approved version: " + versionId);
-//    }
+    public Version findById(UUID id) {
+        return versionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Version not found with id: " + id));
+    }
 
     @Transactional
     public void approveVersion(UUID versionId) {
         Version newVersion = versionRepository.findById(versionId)
                 .orElseThrow(() -> new RuntimeException("Version not found: " + versionId));
 
+        if (newVersion.isApproved()) {
+            return;
+        }
+
         newVersion.setApproved(true);
         newVersion.setActive(true);
 
         versionRepository.save(newVersion);
     }
+
+    public Version getLastApprovedVersion(UUID documentId) {
+        return versionRepository.findFirstByDocumentIdAndActiveTrueOrderByVersionNumberDesc(documentId)
+                .orElseThrow(() -> new RuntimeException("No approved versions found for document: " + documentId));
+    }
+
+//    @Transactional
+//    public void approveVersion(UUID versionId) {
+//        Version newVersion = versionRepository.findById(versionId)
+//                .orElseThrow(() -> new RuntimeException("Version not found: " + versionId));
+//
+//        newVersion.setApproved(true);
+//        newVersion.setActive(true);
+//
+//        versionRepository.save(newVersion);
+//    }
 
     @Transactional
     public void deleteVersion(UUID versionId) {

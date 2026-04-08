@@ -82,7 +82,10 @@
                                 <li th:each="doc : ${entry.value}">
                                     <div class="tree-item file-clickable"
                                          th:data-id="${doc.id}"
+                                         th:data-name="${doc.name}"
                                          onclick="handleFileClick(this)">
+<!--                                         th:data-id="${doc.id}"-->
+<!--                                         onclick="handleFileClick(this)">-->
                                         <img th:src="@{/document-microservice/images/icon-file.png}" alt="file">
                                         <span th:text="${doc.name}">File Name</span>
                                     </div>

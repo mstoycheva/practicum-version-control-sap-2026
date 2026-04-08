@@ -18,4 +18,5 @@ public interface VersionRepository extends JpaRepository<Version, UUID> {
     Integer findMaxVersionNumberByDocumentId(@Param("documentId") UUID documentId);
     void deleteById(@NonNull UUID id);
     List<Version> findAllByDocumentIdAndActiveTrue(UUID documentId);
+    Optional<Version> findFirstByDocumentIdAndActiveTrueOrderByVersionNumberDesc(UUID documentId);
 }

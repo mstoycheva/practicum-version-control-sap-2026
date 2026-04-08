@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -127,15 +128,22 @@ public class DocumentController {
 
     @GetMapping("/documents/download/{id}")
     public ResponseEntity<byte[]> downloadDocument(@PathVariable UUID id) {
-        File fileEntity = fileService.getFileEntityByDocumentId(id);
-        Document doc = documentService.findById(id);
+        File fileEntity = fileService.getFileEntityByVersionId(id);
+        Version version = versionService.findById(id);
+
         byte[] data = fileEntity.getFile_path();
         String contentType = fileEntity.getContent();
-
         if (contentType == null) contentType = MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
+        String fileName = UriUtils.encode(version.getMessage(), StandardCharsets.UTF_8);
+
+        if (fileName == null || fileName.isEmpty()) {
+            fileName = "document_" + id.toString();
+        }
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + doc.getName() + "\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName)
+                .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
                 .contentType(MediaType.parseMediaType(contentType))
                 .body(data);
     }

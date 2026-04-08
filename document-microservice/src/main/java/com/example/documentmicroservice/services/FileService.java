@@ -49,4 +49,12 @@ public class FileService {
         return fileRepository.findByVersionId(version.getId())
                 .orElseThrow(() -> new RuntimeException("File content not found"));
     }
+
+    public File getFileEntityByVersionId(UUID versionId) {
+        Version version = versionRepository.findById(versionId)
+                .stream().findFirst()
+                .orElseThrow(() -> new RuntimeException("Version not found"));
+        return fileRepository.findByVersionId(version.getId())
+                .orElseThrow(() -> new RuntimeException("File content not found"));
+    }
 }

@@ -32,13 +32,13 @@ public class Version {
     @Column(name = "created_at")
     private LocalDateTime createdAt=LocalDateTime.now();
 
-    @JsonProperty("isApproved")
-    @JsonInclude(JsonInclude.Include.ALWAYS)
+//    @JsonProperty("isApproved")
+//    @JsonInclude(JsonInclude.Include.ALWAYS)
     @Column(name = "is_approved")
     private boolean approved;
 
-    @JsonProperty("isActive")
-    @JsonInclude(JsonInclude.Include.ALWAYS)
+//    @JsonProperty("isActive")
+//    @JsonInclude(JsonInclude.Include.ALWAYS)
     @Column(name = "is_active")
     private boolean active;
 
@@ -47,5 +47,15 @@ public class Version {
 
     @Column(name = "user_id", nullable = false)
     private UUID userId;
+
+    @JsonProperty("isApproved")
+    public boolean isApproved() {
+        return approved;
+    }
+
+    @JsonProperty("isActive")
+    public boolean isActive() {
+        return active;
+    }
 
 }
