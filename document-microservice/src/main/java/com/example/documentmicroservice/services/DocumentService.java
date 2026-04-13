@@ -44,6 +44,10 @@ public class DocumentService {
         return data;
     }
 
+    public List<Document> findAllByProjectName(String projectName) {
+        return documentRepository.findByDescription(projectName);
+    }
+
     public Document findById(UUID documentId) {
         return documentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Document not found with id: " + documentId));

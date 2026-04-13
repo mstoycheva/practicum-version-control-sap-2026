@@ -139,6 +139,14 @@ th, td {
     text-align: left;
 }
 
+.col-description {
+    flex: 3;
+    display: flex;
+    justify-content: right;
+    align-items: center;
+    text-align: center;
+}
+
 .col-user    { flex: 2; }
 .col-email   { flex: 2.5;  }
 .col-role    { flex: 1.5; }

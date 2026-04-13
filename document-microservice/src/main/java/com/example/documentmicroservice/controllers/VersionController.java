@@ -19,12 +19,6 @@ public class VersionController {
         this.versionService = versionService;
     }
 
-//    @PostMapping("/{id}/accept")
-//    public ResponseEntity<?> acceptVersion(@PathVariable UUID id) {
-//        versionService.approveVersion(id);
-//        return ResponseEntity.ok().build();
-//    }
-
     @PatchMapping("/{versionId}/accept")
     public ResponseEntity<String> approveVersion(@PathVariable UUID versionId) {
         try {

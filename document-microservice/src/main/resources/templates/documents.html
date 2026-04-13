@@ -49,7 +49,7 @@
                 <th:block th:each="p : ${allProjects}">
                     <div th:if="${p['name'] == entry.key}" th:remove="tag">
 
-                        <div th:if="${p['public'] == true || p['isPublic'] == true || userRole == 'admin' || (p['ownerId'] != null && p['ownerId'].toString() == userId.toString())}"
+                        <div th:if="${p['public'] == true || p['isPublic'] == true || userRole == 'admin' || userRole == 'reader' || userRole == 'editor' || (p['ownerId'] != null && p['ownerId'].toString() == userId.toString())}"
                              class="project-container" style="margin-bottom: 10px;">
 
                             <div class="folder-header" style="display: flex; align-items: center; justify-content: space-between;">
@@ -76,6 +76,9 @@
                                         <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 18px; height: 18px;">
                                     </button>
                                 </form>
+                                <div th:if="${errorMessage}" style="color: white; background: #e84c4c; padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+                                    <span th:text="${errorMessage}"></span>
+                                </div>
                             </div>
 
                             <ul class="nested-docs" style="display: none; list-style: none; padding-left: 25px;">
@@ -84,8 +87,6 @@
                                          th:data-id="${doc.id}"
                                          th:data-name="${doc.name}"
                                          onclick="handleFileClick(this)">
-<!--                                         th:data-id="${doc.id}"-->
-<!--                                         onclick="handleFileClick(this)">-->
                                         <img th:src="@{/document-microservice/images/icon-file.png}" alt="file">
                                         <span th:text="${doc.name}">File Name</span>
                                     </div>
@@ -119,14 +120,19 @@
         </div>
 
         <div th:if="${userRole == 'author' || userRole == 'admin'}" style="padding: 0 15px;">
-            <form th:action="@{/document-microservice/uploadVersion}" method="post" enctype="multipart/form-data" id="mainUploadForm" style="display: flex; flex-direction: column; gap: 12px;">
+
+            <form th:action="@{/document-microservice/uploadVersion}" method="post" enctype="multipart/form-data" id="mainUploadForm"
+                  th:if="${not #lists.isEmpty(allDocuments)}"
+                  style="display: flex; flex-direction: column; gap: 12px;">
+
                 <input type="hidden" name="userId" th:value="${userId}">
                 <input type="hidden" name="name" th:value="${username}">
 
-                <label style="font-size: 0.8rem; color: #666; margin-bottom: -8px;">Target Document:</label>
+                <label style="font-size: 0.8rem; color: #666; margin-bottom: -8px;">Target Document (Your Docs):</label>
                 <select name="docId" class="doc-input" required style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd;">
                     <option value="" disabled selected>-- Select Document --</option>
                     <option th:each="doc : ${allDocuments}"
+                            th:if="${doc.createdBy != null && doc.createdBy.toString() == userId.toString()}"
                             th:value="${doc.id}"
                             th:text="${doc.name}">
                     </option>
@@ -136,22 +142,36 @@
 
                 <button type="button" class="upload-btn" onclick="document.getElementById('fileInputMain').click()" style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                     <img th:src="@{/document-microservice/images/icon-upload.png}" alt="upload" style="width: 20px; height: 20px;">
-                    UPLOAD FILE
+                    UPLOAD
                 </button>
             </form>
+
+            <div th:if="${#lists.isEmpty(allDocuments) && userRole == 'admin'}" style="text-align: center; color: #888; font-size: 0.8rem; padding: 20px;">
+                You don't own any documents to upload versions to.
+            </div>
         </div>
 
-        <div id="version-container" style="display: none; margin-top: 30px;">
+        <div th:if="${userRole == 'editor' || userRole == 'author'}" id="version-container" style="display: none; margin-top: 30px;">
             <div class="section-title">Drafts</div>
-            <ul class="version-list" style="list-style: none; padding: 0;">
-            </ul>
+            <ul class="version-list" style="list-style: none; padding: 0;"></ul>
         </div>
 
-        <div class="section-title" style="margin-top: 20px;">Collaborators</div>
-        <div class="collaborators" style="display: flex; gap: 10px; padding: 10px 0;">
-            <div style="background: #ccc; width: 40px; height: 40px; border-radius: 50%;"></div>
-            <div style="background: #bbb; width: 40px; height: 40px; border-radius: 50%;"></div>
+        <div th:if="${userRole != 'author' && userRole != 'editor'}"
+             style="margin-top: 40px; padding: 30px; border: 1px dashed #ccc; border-radius: 15px; text-align: center; background: #fafafa;">
+
+            <div style="font-size: 3rem; margin-bottom: 10px;">🗝</div>
+            <h3 style="color: #555; font-size: 1.1rem; margin-bottom: 8px;">View-Only Mode</h3>
+            <p style="color: #888; font-size: 0.85rem; max-width: 200px; margin: 0 auto; line-height: 1.4;">
+                You are currently in reading mode. You can browse documents and download versions.
+            </p>
+
+            <div style="margin-top: 15px;">
+        <span style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #aaa; border: 1px solid #eee; padding: 4px 10px; border-radius: 20px;">
+            Role: <span th:text="${userRole}">Reader</span>
+        </span>
+            </div>
         </div>
+
     </div>
 </div>
 
@@ -162,6 +182,16 @@
     const userRole = /*[[${userRole}]]*/ 'reader';
 
     console.log("Loaded drafts:", allDrafts);
+</script>
+
+<script th:if="${param.errorType != null and param.errorType[0] == 'largeFile'}">
+    Swal.fire({
+        icon: 'error',
+        title: 'Upload Error',
+        text: 'The file exceeds the 10MB limit. Please try a smaller file.',
+        confirmButtonColor: '#95b3a0',
+        confirmButtonText: 'Try Again'
+    });
 </script>
 
 </body>

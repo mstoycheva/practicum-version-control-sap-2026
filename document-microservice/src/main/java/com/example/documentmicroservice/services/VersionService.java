@@ -5,6 +5,8 @@ import com.example.documentmicroservice.repositories.FileRepository;
 import com.example.documentmicroservice.repositories.VersionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -47,6 +49,13 @@ public class VersionService {
 
     public List<Version> findAllByCreatedBy(UUID userId) {
         return versionRepository.findByUserId(userId);
+    }
+
+    public List<Version> findAllByDocumentIds(List<UUID> documentIds) {
+        if (documentIds == null || documentIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return versionRepository.findAllByDocumentIdIn(documentIds);
     }
 
     public Version findById(UUID id) {

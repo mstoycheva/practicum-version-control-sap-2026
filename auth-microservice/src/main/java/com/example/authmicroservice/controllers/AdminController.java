@@ -83,7 +83,7 @@ public class AdminController {
                 model.addAttribute("documents", documentCount);
 
             } catch (Exception e) {
-                System.err.println("CRITICAL ERROR: Could not fetch microservice data: " + e.getMessage());
+                System.err.println("Could not fetch microservice data: " + e.getMessage());
                 model.addAttribute("projectsList", List.of());
                 model.addAttribute("documentsList", List.of());
                 model.addAttribute("projects", 0);
@@ -92,8 +92,6 @@ public class AdminController {
 
             model.addAttribute("projectsList", allProjects);
             model.addAttribute("documentsList", allDocuments);
-//            model.addAttribute("projects", projectCount);
-//            model.addAttribute("documents", documentCount);
             model.addAttribute("admin", currentAdmin);
 
             return "adminDashboard";

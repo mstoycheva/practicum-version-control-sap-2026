@@ -20,10 +20,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UserService userService, JwtService jwtService) {
+    public AuthController(UserService userService, JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.jwtService = jwtService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/register")
@@ -66,11 +68,10 @@ public class AuthController {
     @PostMapping("/login")
     public String login(@ModelAttribute LoginRequest request, HttpServletResponse response) {
         User user = userService.findByUsername(request.getUsername());
-        if (user != null) {
+        if (user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             String token = jwtService.generateToken(user);
-
             Cookie jwtCookie = new Cookie("token", token);
-            jwtCookie.setHttpOnly(false);
+            jwtCookie.setHttpOnly(true);
             jwtCookie.setPath("/");
             jwtCookie.setMaxAge(3600);
             response.addCookie(jwtCookie);
@@ -79,7 +80,7 @@ public class AuthController {
                     + user.getId()
                     + "&name=" + user.getUsername();
         } else {
-            return "redirect:/";
+            return "redirect:./?error";
         }
     }
 }

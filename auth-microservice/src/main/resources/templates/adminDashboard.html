@@ -6,7 +6,7 @@
     <link rel="stylesheet" th:href="@{/auth-microservice/css/stylesheet.css}">
     <link rel="stylesheet" th:href="@{/auth-microservice/css/admin.css}" href="../static/css/admin.css">
     <script src="../static/js/auth.js" th:src="@{/auth-microservice/js/auth.js}"></script>
-    <link rel="icon" type="image/png" th:href="@{images/logo.png}">
+    <link rel="icon" type="image/png" th:href="@{/auth-microservice/images/logo.png}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body style="height: auto; overflow-y: auto;">
@@ -108,11 +108,11 @@
                        placeholder="Search by project title..."
                        style="padding: 8px; width: 100%; border-radius: 5px; border: 1px solid #ddd;">
             </div>
-            <table id="projects-table">
+            <table id="projects-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                 <tr>
                     <th>Project Name</th>
-                    <th>Description</th>
+                    <th class="col-description">Description</th>
                 </tr>
                 </thead>
                 <tbody>

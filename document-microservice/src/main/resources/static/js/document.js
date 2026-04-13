@@ -1,20 +1,22 @@
 function toggleFolder(element) {
-    const folderHeader = element.parentElement;
-    const nestedDocs = folderHeader.nextElementSibling;
-    if (nestedDocs && nestedDocs.classList.contains('nested-docs')) {
-        const isVisible = nestedDocs.style.display === 'block';
-        nestedDocs.style.display = isVisible ? 'none' : 'block';
+    console.log("Clicked");
+    const container = element.closest('.project-container');
+    const nestedDocs = container.querySelector('.nested-docs');
+
+    if (nestedDocs) {
+        const isHidden = nestedDocs.style.display === 'none' || nestedDocs.style.display === '';
+
+        if (isHidden) {
+            nestedDocs.style.display = 'block';
+            console.log("Visible");
+        } else {
+            nestedDocs.style.display = 'none';
+            console.log("Hidden");
+        }
+    } else {
+        console.error("Error");
     }
 }
-// function handleFileClick(element) {
-//     const id = element.getAttribute('data-id');
-//     const name = element.getAttribute('data-name');
-//     const description = element.getAttribute('data-description');
-//     const date = element.getAttribute('data-date');
-//
-//     showDetails(name, description, date, id);
-//     filterAndShowDrafts(id, name, description, date);
-// }
 
 function handleFileClick(element) {
     const id = element.getAttribute('data-id');
@@ -28,8 +30,8 @@ function handleFileClick(element) {
 
 function showDetails(name, description, date, id) {
     console.log("Switching to file ID:", id);
-    // const title = document.getElementById('selected-file-title');
-    // if (title) title.innerText = name;
+    const title = document.getElementById('selected-file-title');
+    if (title) title.innerText = name;
 }
 
 function handleVersion(versionId, action) {
@@ -39,7 +41,7 @@ function handleVersion(versionId, action) {
 
     console.log(`Sending ${method} request to: ${url}`);
 
-    fetch(url, { method: method })
+    fetch(url, {method: method})
         .then(response => {
             if (response.ok) {
                 const versionIndex = allDrafts.findIndex(v => String(v.id) === String(versionId));
@@ -73,11 +75,13 @@ function handleVersion(versionId, action) {
 
 function filterAndShowDrafts(selectedDocId, name, description, date) {
     const container = document.getElementById('version-container');
-    const listElement = container.querySelector('.version-list');
     const activeContainer = document.getElementById('active-version-container');
 
-    if (name) activeContainer.dataset.docName = name;
-    const displayName = name || activeContainer.dataset.docName || "Document";
+    if (activeContainer) {
+        if (name) activeContainer.dataset.docName = name;
+    }
+
+    const displayName = name || (activeContainer ? activeContainer.dataset.docName : "") || "Document";
 
     const filteredVersions = allDrafts.filter(v => {
         const dId = v.documentId || v.docId;
@@ -94,7 +98,6 @@ function filterAndShowDrafts(selectedDocId, name, description, date) {
             activeContainer.innerHTML = activeVersions.map((v, index) => {
                 const isLatest = index === 0;
                 const vNum = v.versionNumber || v.version_number;
-
                 return `
                 <div class="version-item" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border: 1px solid #eee; border-radius: 8px; border-left: 5px solid ${isLatest ? '#569e68' : '#ccc'}; background: ${isLatest ? '#fafafa' : 'transparent'}; margin-bottom: 10px;">
                     <div class="file-info" style="display: flex; align-items: center; gap: 12px;">
@@ -116,34 +119,50 @@ function filterAndShowDrafts(selectedDocId, name, description, date) {
         }
     }
 
+    if (!container) return;
+
+    const listElement = container.querySelector('.version-list');
+    if (!listElement) return;
+
     const draftsOnly = filteredVersions.filter(v => {
         const vNum = v.versionNumber || v.version_number;
         const isApproved = (v.active || v.isActive || v.approved || v.isApproved);
         return vNum !== 1 && !isApproved;
     });
 
-    if (container) {
-        container.style.display = 'block';
-        if (draftsOnly.length > 0) {
-            listElement.innerHTML = draftsOnly.map(draft => `
-                <li class="version-item" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; background: white; border-radius: 8px; margin-bottom: 6px; border: 1px solid #eee;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <img src="${iconDocPath}" alt="doc" style="width: 18px;">
-                        <span style="font-size: 10px; background: #f0f0f0; padding: 1px 5px; border-radius: 4px;">v.${draft.versionNumber || draft.version_number}</span>
-                        <span style="font-size: 11px;">${draft.message || 'Draft'}</span>
-                    </div>
-                    <div style="display: flex; gap: 5px;">
-                        <button onclick="handleVersion('${draft.id}', 'accept')" 
-                                style="padding: 2px 8px; border: none; background: #569e68; color: white; border-radius: 4px; cursor: pointer;">✔</button>
-                        <button onclick="handleVersion('${draft.id}', 'reject')" 
-                                style="padding: 2px 8px; border: none; background: #e84c4c; color: white; border-radius: 4px; cursor: pointer;">✖</button>
-                    </div>
-                </li>`).join('');
-        } else {
-            listElement.innerHTML = '<p style="font-size: 0.85rem; color: #888; padding-left: 10px;">No pending drafts.</p>';
-        }
+    container.style.display = 'block';
+    if (draftsOnly.length > 0) {
+        listElement.innerHTML = draftsOnly.map(draft => `
+           <li class="version-item" style="display: flex; align-items: center; padding: 8px 10px; background: white; border-radius: 8px; margin-bottom: 6px; border: 1px solid #eee; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+        <img src="${iconDocPath}" alt="doc" style="width: 18px;">
+        <span style="font-size: 10px; background: #f0f0f0; padding: 1px 5px; border-radius: 4px;">
+            v.${draft.versionNumber || draft.version_number}
+        </span>
+        <span style="font-size: 11px;">${draft.message || 'Draft'}</span>
+    </div>
+
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+        <a href="/document-microservice/documents/download/${draft.id}">
+           <img src="${iconDownloadPath}" alt="download" style="width: 22px; height: 22px;">
+        </a>
+        
+        ${userRole === 'editor' ? `
+            <div style="display: flex; gap: 5px; border-left: 1px solid #eee; padding-left: 10px;">
+                <button onclick="handleVersion('${draft.id}', 'accept')" 
+                        style="padding: 2px 8px; border: none; background: #569e68; color: white; border-radius: 4px; cursor: pointer;">✔</button>
+                <button onclick="handleVersion('${draft.id}', 'reject')" 
+                        style="padding: 2px 8px; border: none; background: #e84c4c; color: white; border-radius: 4px; cursor: pointer;">✖</button>
+            </div>
+        ` : ''}
+    </div>
+</li>
+           `).join('');
+    } else {
+        listElement.innerHTML = '<p style="font-size: 0.85rem; color: #888; padding-left: 10px;">No pending drafts.</p>';
     }
 }
+
 function showProjectFields() {
     const fields = document.getElementById('projectFields');
     const mainBtn = document.getElementById('toggleProjectBtn');

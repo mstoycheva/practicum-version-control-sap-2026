@@ -38,6 +38,12 @@ public class FileController {
             System.out.println("empty file");
         }
 
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId
+                    + "&name=" + username
+                    + "&errorType=largeFile";
+        }
+
         try {
             Document document = documentService.saveDocument(file, projectId, projectName, userId);
             Version version = versionService.saveVersion(userId, document);
@@ -58,6 +64,12 @@ public class FileController {
 
         if (file == null || file.isEmpty()) {
             System.out.println("empty file");
+        }
+
+        if (file.getSize() > 10 * 1024 * 1024) {
+            return "redirect:http://localhost:8080/document-microservice/documents?userId=" + userId
+                    + "&name=" + name
+                    + "&errorType=largeFile";
         }
 
         try {

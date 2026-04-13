@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>My Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" href="../static/css/stylesheet.css" th:href="@{/auth-microservice/css/stylesheet.css}">
     <link rel="icon" type="image/png" th:href="@{/auth-microservice/images/logo.png}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -131,16 +132,37 @@
         })
             .then(response => {
                 if (response.status === 403 || response.status === 401) {
-                    alert("Session has expired or you don't have permission.");
-                    window.location.href = "/login";
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Session Expired',
+                        text: "Your session has expired or you don't have permission.",
+                        confirmButtonColor: '#e74c3c'
+                    }).then(() => {
+                        window.location.href = "/login";
+                    });
                 } else if (response.ok) {
-                    alert("Changes saved successfully!");
-                    location.reload();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Changes saved successfully!',
+                        timer: 2000, // Автоматично затваряне след 2 сек
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
                 } else {
-                    alert("Error occurred while saving!");
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Oops...',
+                        text: 'Error occurred while saving!',
+                        confirmButtonColor: '#95b3a0'
+                    });
                 }
             })
-            .catch(err => console.error('Fetch Error:', err));
+            .catch(err => {
+                console.error('Fetch Error:', err);
+                Swal.fire('Error', 'Something went wrong with the connection.', 'error');
+            });
     }
 </script>
 </body>

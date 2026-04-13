@@ -43,44 +43,11 @@ public class DocumentController {
 
         Map<String, Object> workspaceData = documentService.getWorkspaceData(userId);
         @SuppressWarnings("unchecked")
-        Map<String, Object> groupedDocs = (Map<String, Object>) workspaceData.getOrDefault("groupedDocs", new java.util.HashMap<>());
+        Map<String, Object> groupedDocs = (Map<String, Object>) workspaceData.getOrDefault("groupedDocs", new HashMap<>());
+        List<Document> allDocuments = documentService.findAllByCreatedBy(userId);
 
         List<Map<String, Object>> allProjects;
-        List<Document> allDocuments = documentService.findAllByCreatedBy(userId);
-        List<Version> rawVersions = versionService.findAllByCreatedBy(userId);
-
-        List<Map<String, Object>> draftDocs = rawVersions.stream().map(v -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", v.getId());
-            map.put("message", v.getMessage());
-            map.put("versionNumber", v.getVersionNumber());
-            if (v.getDocumentId() != null) {
-                map.put("documentId", v.getDocumentId());
-            }
-            return map;
-        }).toList();
-        //model.addAttribute("allDocuments", allDocuments);
-//        try {
-//            RestTemplate restTemplate = new RestTemplate();
-//            String url = "http://localhost:8080/project-microservice/projects/user/" + userId;
-////            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
-//            allProjects = restTemplate.getForObject(url, List.class);
-//            model.addAttribute("allProjects", allProjects);
-//            if (allProjects != null) {
-//                model.addAttribute("allProjects", allProjects);
-//
-//                for (Map<String, Object> proj : allProjects) {
-//                    String projectName = (String) proj.get("name");
-//                    if (!groupedDocs.containsKey(projectName)) {
-//                        groupedDocs.put(projectName, new ArrayList<>());
-//                    }
-//                }
-//            } else {
-//                model.addAttribute("allProjects", new ArrayList<>());
-//            }
-//        } catch (Exception e) {
-//            System.err.println("Project fetch failed: " + e.getMessage());
-//        }
+        List<UUID> allVisibleDocIds = new ArrayList<>();
 
         try {
             RestTemplate restTemplate = new RestTemplate();
@@ -91,29 +58,42 @@ public class DocumentController {
             if (allProjects != null) {
                 for (Map<String, Object> proj : allProjects) {
                     String projectName = (String) proj.get("name");
-                    if (!groupedDocs.containsKey(projectName)) {
-                        groupedDocs.put(projectName, new ArrayList<>());
-                    }
+
+                    List<Document> projectDocs = documentService.findAllByProjectName(projectName);
+                    groupedDocs.put(projectName, projectDocs);
+
+                    projectDocs.forEach(d -> allVisibleDocIds.add(d.getId()));
                 }
             }
         } catch (Exception e) {
             System.err.println("Project fetch failed: " + e.getMessage());
         }
 
+        List<Version> rawVersions = versionService.findAllByDocumentIds(allVisibleDocIds);
+
+        List<Map<String, Object>> draftDocs = rawVersions.stream().map(v -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", v.getId());
+            map.put("message", v.getMessage());
+            map.put("versionNumber", v.getVersionNumber());
+            map.put("active", v.isActive());
+            map.put("approved", v.isApproved());
+            if (v.getDocumentId() != null) {
+                map.put("documentId", v.getDocumentId());
+            }
+            return map;
+        }).toList();
+
         String role = "reader";
         try {
             RestTemplate restTemplate = new RestTemplate();
             String authUrl = "http://localhost:8080/auth-microservice/users/" + userId;
-
             ResponseEntity<Map> response = restTemplate.getForEntity(authUrl, Map.class);
-
             if (response.getStatusCode().is2xxSuccessful()) {
                 role = response.getBody().get("role").toString();
             }
-        } catch (HttpClientErrorException e) {
-            System.err.println("HTTP Error: " + e.getStatusCode() + " - " + e.getResponseBodyAsString());
         } catch (Exception e) {
-            System.err.println("Connection failed: " + e.getMessage());
+            System.err.println("Auth fetch failed: " + e.getMessage());
         }
 
         model.addAttribute("userRole", role.toLowerCase());
@@ -123,6 +103,7 @@ public class DocumentController {
         model.addAttribute("activeDocs", workspaceData.get("activeDocs"));
         model.addAttribute("draftDocs", draftDocs);
         model.addAttribute("allDocuments", allDocuments);
+
         return "documents";
     }
 
@@ -137,7 +118,7 @@ public class DocumentController {
 
         String fileName = UriUtils.encode(version.getMessage(), StandardCharsets.UTF_8);
 
-        if (fileName == null || fileName.isEmpty()) {
+        if (fileName.isEmpty()) {
             fileName = "document_" + id.toString();
         }
 
