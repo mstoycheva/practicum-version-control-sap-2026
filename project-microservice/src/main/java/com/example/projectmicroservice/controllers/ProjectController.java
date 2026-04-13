@@ -2,10 +2,7 @@ package com.example.projectmicroservice.controllers;
 import com.example.projectmicroservice.models.Project;
 import com.example.projectmicroservice.services.ProjectService;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -43,13 +40,14 @@ public class ProjectController {
             @RequestParam("projectName") String name,
             @RequestParam("userId") UUID userId,
             @RequestParam("username") String username,
-            @RequestParam(value = "isPublic",defaultValue = "false") boolean isPublic) {
+            @RequestParam(value = "isPublic",defaultValue = "false") boolean isPublic,
+            @RequestParam(value = "description") String description) {
 
         Project project = new Project();
         project.setName(name);
         project.setOwnerId(userId);
         project.setCreatedAt(LocalDateTime.now());
-        project.setDescription("Active");
+        project.setDescription(description);
         project.setPublic(isPublic);
 
         projectService.saveProject(project);

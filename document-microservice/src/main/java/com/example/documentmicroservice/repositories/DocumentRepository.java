@@ -8,7 +8,7 @@ import java.util.UUID;
 @Repository
 public interface DocumentRepository extends JpaRepository<Document, UUID> {
     List<Document> findByCreatedBy(UUID userId);
-    List<Document> findByDescription(String description);
+    List<Document> findByProjectId(UUID projectId);
     long count();
 
 }

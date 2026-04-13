@@ -67,20 +67,24 @@ public class AuthController {
 
     @PostMapping("/login")
     public String login(@ModelAttribute LoginRequest request, HttpServletResponse response) {
-        User user = userService.findByUsername(request.getUsername());
-        if (user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            String token = jwtService.generateToken(user);
-            Cookie jwtCookie = new Cookie("token", token);
-            jwtCookie.setHttpOnly(true);
-            jwtCookie.setPath("/");
-            jwtCookie.setMaxAge(3600);
-            response.addCookie(jwtCookie);
+        try {
+            User user = userService.findByUsername(request.getUsername());
+            if (user != null && passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+                String token = jwtService.generateToken(user);
+                Cookie jwtCookie = new Cookie("token", token);
+                jwtCookie.setHttpOnly(true);
+                jwtCookie.setPath("/");
+                jwtCookie.setMaxAge(3600);
+                response.addCookie(jwtCookie);
 
-            return "redirect:http://localhost:8080/document-microservice/documents?userId="
-                    + user.getId()
-                    + "&name=" + user.getUsername();
-        } else {
+                return "redirect:http://localhost:8080/document-microservice/documents?userId="
+                        + user.getId()
+                        + "&name=" + user.getUsername();
+            }
+        } catch(Exception e){
+                return "redirect:./?error";
+            }
             return "redirect:./?error";
-        }
+
     }
 }

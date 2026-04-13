@@ -44,8 +44,8 @@ public class DocumentService {
         return data;
     }
 
-    public List<Document> findAllByProjectName(String projectName) {
-        return documentRepository.findByDescription(projectName);
+    public List<Document> findAllByProjectId(UUID projectId) {
+        return documentRepository.findByProjectId(projectId);
     }
 
     public Document findById(UUID documentId) {

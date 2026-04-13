@@ -12,14 +12,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriUtils;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 @Controller
 public class DocumentController {
@@ -41,28 +39,47 @@ public class DocumentController {
 
         if (userId == null) return "redirect:/error";
 
+        String role = "reader";
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String authUrl = "http://localhost:8080/auth-microservice/users/" + userId;
+            ResponseEntity<Map> response = restTemplate.getForEntity(authUrl, Map.class);
+            if (response.getStatusCode().is2xxSuccessful()) {
+                role = response.getBody().get("role").toString().toLowerCase();
+            }
+        } catch (Exception e) {
+            System.err.println("Auth fetch failed: " + e.getMessage());
+        }
+
+        String projectUrl;
+        if (role.equals("admin") || role.equals("editor")) {
+            projectUrl = "http://localhost:8080/project-microservice/projects/all";
+        } else {
+            projectUrl = "http://localhost:8080/project-microservice/projects/public/" + userId;
+        }
+
         Map<String, Object> workspaceData = documentService.getWorkspaceData(userId);
         @SuppressWarnings("unchecked")
         Map<String, Object> groupedDocs = (Map<String, Object>) workspaceData.getOrDefault("groupedDocs", new HashMap<>());
         List<Document> allDocuments = documentService.findAllByCreatedBy(userId);
 
-        List<Map<String, Object>> allProjects;
+        List<Map<String, Object>> allProjects = new ArrayList<>();
         List<UUID> allVisibleDocIds = new ArrayList<>();
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            String url = "http://localhost:8080/project-microservice/projects/public/" + userId;
-            allProjects = restTemplate.getForObject(url, List.class);
+            allProjects = restTemplate.getForObject(projectUrl, List.class);
             model.addAttribute("allProjects", allProjects);
 
             if (allProjects != null) {
                 for (Map<String, Object> proj : allProjects) {
-                    String projectName = (String) proj.get("name");
+                    UUID projectId = UUID.fromString(proj.get("id").toString());
+                    List<Document> projectDocs = documentService.findAllByProjectId(projectId);
+                    groupedDocs.put(String.valueOf(projectId), projectDocs);
 
-                    List<Document> projectDocs = documentService.findAllByProjectName(projectName);
-                    groupedDocs.put(projectName, projectDocs);
-
-                    projectDocs.forEach(d -> allVisibleDocIds.add(d.getId()));
+                    if (projectDocs != null) {
+                        projectDocs.forEach(d -> allVisibleDocIds.add(d.getId()));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -70,7 +87,6 @@ public class DocumentController {
         }
 
         List<Version> rawVersions = versionService.findAllByDocumentIds(allVisibleDocIds);
-
         List<Map<String, Object>> draftDocs = rawVersions.stream().map(v -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", v.getId());
@@ -84,19 +100,7 @@ public class DocumentController {
             return map;
         }).toList();
 
-        String role = "reader";
-        try {
-            RestTemplate restTemplate = new RestTemplate();
-            String authUrl = "http://localhost:8080/auth-microservice/users/" + userId;
-            ResponseEntity<Map> response = restTemplate.getForEntity(authUrl, Map.class);
-            if (response.getStatusCode().is2xxSuccessful()) {
-                role = response.getBody().get("role").toString();
-            }
-        } catch (Exception e) {
-            System.err.println("Auth fetch failed: " + e.getMessage());
-        }
-
-        model.addAttribute("userRole", role.toLowerCase());
+        model.addAttribute("userRole", role);
         model.addAttribute("userId", userId);
         model.addAttribute("username", name);
         model.addAttribute("groupedDocs", groupedDocs);
